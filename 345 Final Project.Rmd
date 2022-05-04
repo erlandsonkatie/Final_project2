@@ -1,13 +1,13 @@
 ---
 title: "345 Final Project"
 author: "Abby Schmidt, Colin Kalsbeek, Katie Erlandson"
-date: "4/21/2022"
+date: "5/6/2022"
 output: word_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-
+# Load all necessary packages
 library(tidyverse)
 library(tidytext)
 library(rvest)
@@ -15,44 +15,48 @@ library(tm)
 library(textclean)
 ```
 
+We were tasked with evaluating the repetitiveness of the most popular songs over time.  The goal of this project was to determine if song repetitiveness has changed over time, and find any other relative patterns that occurred within the data.  This was accomplished in three main steps:  creating a list of top songs from 1958 to 2021, gathering the lyrics, and generating measures of song repetitiveness.
 
+The first step involves creating a list of the top songs from 1958 to 2021.  This was done by reading in each year's 'Billboard Year-End Hot 100 Singles' url from Wikipedia.  The data gathered from the urls proved to have some inconsistencies.  For example, the billboard chart from the year 1958 only includes 50 songs while every other year provides the top 100 songs.  Also, the urls for the years 2012 and 2013 read in as being empty and contained no data, so the songs for these years were omitted from analysis.
 
-```{r}
+```{r, eval=FALSE, include=FALSE}
 # urls for top songs of each year 1958-2021
+# 1958 only has top 50 songs
+# Years 2012 and 2013 no included
 url_58 = "https://en.wikipedia.org/wiki/Billboard_year-end_top_50_singles_of_1958"
- url_59 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1959"
- url_60 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1960"
- url_61 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1961"
- url_62 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1962"
- url_63 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1963"
- url_64 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1964"
- url_65 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1965"
- url_66 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1966"
- url_67 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1967"
- url_68 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1968"
- url_69 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1969"
- url_70 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1970"
- url_71 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1971"
+url_59 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1959"
+url_60 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1960"
+url_61 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1961"
+url_62 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1962"
+url_63 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1963"
+url_64 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1964"
+url_65 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1965"
+url_66 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1966"
+url_67 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1967"
+url_68 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1968"
+url_69 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1969"
+url_70 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1970"
+url_71 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1971"
 url_72 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1972"
- url_73 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1973"
- url_74 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1974"
- url_75 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1975"
- url_76 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1976"
- url_77 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1977"
- url_78 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1978"
- url_79 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1979"
- url_80 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1980"
- url_81 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1981"
- url_82 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1982"
- url_83 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1983"
- url_84 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1984"
- url_85 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1985"
- url_86 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1986"
- url_87 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1987"
- url_88 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1988"
- url_89 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1989"
- url_90 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1990"
- url_91 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1991"
+url_73 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1973"
+url_74 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1974"
+url_75 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1975"
+url_76 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1976"
+url_77 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1977"
+url_78 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1978"
+url_79 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1979"
+url_80 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1980"
+url_81 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1981"
+url_82 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1982"
+url_83 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1983"
+url_84 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1984"
+url_85 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1985"
+url_86 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1986"
+url_87 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1987"
+url_88 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1988"
+url_89 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1989"
+url_90 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1990"
+url_91 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1991"
 url_92 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1992"
 url_93 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1993"
 url_94 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_1994"
@@ -86,7 +90,12 @@ url_21 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_20
  
 ```
 
-```{r}
+The function 'songs' was then created in order to take each year's url data and transform it into table format.  This function takes in a url and a number n that can range from 1 to 100 with its default value being 10.  The input n represents the number of songs to be returned for each year.  Recall that the 'songs' function can only return up to 50 songs for the year 1958, but can generate up to 100 songs for every other year.  The tables that this function returns include the song title, artist, and number ranking on the billboard chart.  The 'songs' function was called for each year in order to generate a table of the top 10 songs for each year from 1958 to 2021.  A column designating year was then added to each year's table.  Lastly, all of the separate year tables were binded together by row to form a single data frame containing 620 songs. 
+
+```{r, eval=FALSE, include=FALSE}
+# Function 'songs' takes in an object x and a number n that can range from 1 to 100 and its default value is 10
+# Function 'songs' can only return up to 50 songs for the year 1958 and function cannot account for the years 2012 and 2013
+# Tables produced contain the song's title, artist, and number ranking in its billboard chart for the corresponding year
 songs = function(x, n=10) {
   url = x
   a = read_html(url)
@@ -98,8 +107,152 @@ songs = function(x, n=10) {
 }
 ```
 
+```{r, eval=FALSE, include=FALSE}
+# Create a table of top 10 songs for each year using 'songs' function
+# Add column to each table specifying year
+tab_58 = songs(url_58)
+ tab_58 = tab_58 %>% mutate(Year = 1958)
+ tab_59 = songs(url_59)
+ tab_59 = tab_59 %>% mutate(Year = 1959)
+ tab_60 = songs(url_60)
+ tab_60 = tab_60 %>% mutate(Year = 1960)
+ tab_61 = songs(url_61)
+ tab_61 = tab_61 %>% mutate(Year = 1961)
+ tab_62 = songs(url_62)
+ tab_62 = tab_62 %>% mutate(Year = 1962)
+ tab_63 = songs(url_63)
+ tab_63 = tab_63 %>% mutate(Year = 1963)
+ tab_64 = songs(url_64)
+ tab_64 = tab_64 %>% mutate(Year = 1964)
+ tab_65 = songs(url_65)
+ tab_65 = tab_65 %>% mutate(Year = 1965)
+ tab_66 = songs(url_66)
+ tab_66 = tab_66 %>% mutate(Year = 1966)
+ tab_67 = songs(url_67)
+ tab_67 = tab_67 %>% mutate(Year = 1967)
+ tab_68 = songs(url_68)
+ tab_68 = tab_68 %>% mutate(Year = 1968)
+ tab_69 = songs(url_69)
+ tab_69 = tab_69 %>% mutate(Year = 1969)
+ tab_70 = songs(url_70)
+ tab_70 = tab_70 %>% mutate(Year = 1970)
+ tab_71 = songs(url_71)
+ tab_71 = tab_71 %>% mutate(Year = 1971)
+ tab_72 = songs(url_72)
+ tab_72 = tab_72 %>% mutate(Year = 1972)
+ tab_73 = songs(url_73)
+ tab_73 = tab_73 %>% mutate(Year = 1973)
+ tab_74 = songs(url_74)
+ tab_74 = tab_74 %>% mutate(Year = 1974)
+ tab_75 = songs(url_75)
+ tab_75 = tab_75 %>% mutate(Year = 1975)
+ tab_76 = songs(url_76)
+ tab_76 = tab_76 %>% mutate(Year = 1976)
+ tab_77 = songs(url_77)
+ tab_77 = tab_77 %>% mutate(Year = 1977)
+ tab_78 = songs(url_78)
+ tab_78 = tab_78 %>% mutate(Year = 1978)
+ tab_79 = songs(url_79)
+ tab_79 = tab_79 %>% mutate(Year = 1979)
+ tab_80 = songs(url_80)
+ tab_80 = tab_80 %>% mutate(Year = 1980)
+ tab_81 = songs(url_81)
+ tab_81 = tab_81 %>% mutate(Year = 1981)
+ tab_82 = songs(url_82)
+ tab_82 = tab_82 %>% mutate(Year = 1982)
+ tab_83 = songs(url_83)
+ tab_83 = tab_83 %>% mutate(Year = 1983)
+ tab_84 = songs(url_84)
+ tab_84 = tab_84 %>% mutate(Year = 1984)
+ tab_85 = songs(url_85)
+ tab_85 = tab_85 %>% mutate(Year = 1985)
+ tab_86 = songs(url_86)
+ tab_86 = tab_86 %>% mutate(Year = 1986)
+ tab_87 = songs(url_87)
+ tab_87 = tab_87 %>% mutate(Year = 1987)
+ tab_88 = songs(url_88)
+ tab_88 = tab_88 %>% mutate(Year = 1988)
+ tab_89 = songs(url_89)
+ tab_89 = tab_89 %>% mutate(Year = 1989)
+ tab_90 = songs(url_90)
+ tab_91 = songs(url_92)
+ tab_90 = tab_90 %>% mutate(Year = 1990)
+ tab_91 = songs(url_91)
+ tab_91 = tab_91 %>% mutate(Year = 1991)
+ tab_92 = songs(url_92)
+ tab_92 = tab_92 %>% mutate(Year = 1992)
+ tab_93 = songs(url_93)
+ tab_93 = tab_93 %>% mutate(Year = 1993)
+ tab_94 = songs(url_94)
+ tab_94 = tab_94 %>% mutate(Year = 1994)
+ tab_95 = songs(url_95)
+ tab_95 = tab_95 %>% mutate(Year = 1995)
+ tab_96 = songs(url_96)
+ tab_96 = tab_96 %>% mutate(Year = 1996)
+ tab_97 = songs(url_97)
+ tab_97 = tab_97 %>% mutate(Year = 1997)
+ tab_98 = songs(url_98)
+ tab_98 = tab_98 %>% mutate(Year = 1998)
+ tab_99 = songs(url_99)
+ tab_99 = tab_99 %>% mutate(Year = 1999)
+ tab_00 = songs(url_00)
+ tab_00 = tab_00 %>% mutate(Year = 2000)
+ tab_01 = songs(url_01)
+ tab_01 = tab_01 %>% mutate(Year = 2001)
+ tab_02 = songs(url_02)
+ tab_02 = tab_02 %>% mutate(Year = 2002)
+ tab_03 = songs(url_03)
+ tab_03 = tab_03 %>% mutate(Year = 2003)
+ tab_04 = songs(url_04)
+ tab_04 = tab_04 %>% mutate(Year = 2004)
+ tab_05 = songs(url_05)
+ tab_05 = tab_05 %>% mutate(Year = 2005)
+ tab_06 = songs(url_06)
+ tab_06 = tab_06 %>% mutate(Year = 2006)
+ tab_07 = songs(url_07)
+ tab_07 = tab_07 %>% mutate(Year = 2007)
+ tab_08 = songs(url_08)
+ tab_08 = tab_08 %>% mutate(Year = 2008)
+ tab_09 = songs(url_09)
+ tab_09 = tab_09 %>% mutate(Year = 2009)
+ tab_10 = songs(url_10)
+ tab_10 = tab_10 %>% mutate(Year = 2010)
+ tab_11 = songs(url_11)
+ tab_11 = tab_11 %>% mutate(Year = 2011)
+ tab_12 = songs(url_12)
+ tab_12 = tab_12 %>% mutate(Year = 2012)
+ tab_13 = songs(url_13)
+ tab_13 = tab_13 %>% mutate(Year = 2013)
+ tab_14 = songs(url_14)
+ tab_14 = tab_14 %>% mutate(Year = 2014)
+ tab_15 = songs(url_15)
+ tab_15 = tab_15 %>% mutate(Year = 2015)
+ tab_16 = songs(url_16)
+ tab_16 = tab_16 %>% mutate(Year = 2016)
+ tab_17 = songs(url_17)
+ tab_17 = tab_17 %>% mutate(Year = 2017)
+ tab_18 = songs(url_18)
+ tab_18 = tab_18 %>% mutate(Year = 2018)
+ tab_19 = songs(url_19)
+ tab_19 = tab_19 %>% mutate(Year = 2019)
+ tab_20 = songs(url_20)
+ tab_20 = tab_20 %>% mutate(Year = 2020)
+ tab_21 = songs(url_21)
+ tab_21 = tab_21 %>% mutate(Year = 2021)
+```
 
-```{r}
+```{r, eval=FALSE, include=FALSE}
+# Bind all individual year tables together by row to for a single data frame of 620 songs
+data_songs = rbind(tab_58, tab_59, tab_60, tab_61, tab_62, tab_63, tab_64, tab_65, tab_66, tab_67, tab_68, tab_69, tab_70, tab_71, tab_72, tab_73, tab_74, tab_75, tab_76, tab_77, tab_78, tab_79, tab_80, tab_81, tab_82, tab_83, tab_84, tab_85, tab_86, tab_87, tab_88, tab_89, tab_90, tab_91, tab_92, tab_93, tab_94, tab_95, tab_96, tab_97, tab_98, tab_99, tab_00, tab_01, tab_02, tab_03, tab_04, tab_05, tab_06, tab_07, tab_08, tab_09, tab_10, tab_11, tab_14, tab_15, tab_16, tab_17, tab_18, tab_19, tab_20, tab_21)
+# Transform 'No.' column to be numeric to ensure song rankings appear in ascending order
+data_songs = data_songs %>% transform(No. = as.numeric(No.))
+# Save 'data_songs' data frame for later use
+save(data_songs, file = "songs.Rda")
+```
+ 
+The second step involves gathering the lyrics for the list of top songs that was previously created.  This was done by reading in each song's url from 'azlyrics.com'.  Multiple songs' lyrics were unable to be found on the 'azlyrics' site and their corresponding objects were made to be empty.  All 620 lyric objects were then put into a list to prepare for analysis.  In order to efficiently generate a list this large, the url objects had to be split to make two separate lists that were then combined into a single list called 'URLs'.
+
+```{r, eval=FALSE, include=FALSE}
 # urls for lyrics
 no1_58 = "https://www.azlyrics.com/lyrics/engelberthumperdinck/volare.html"
 no2_58 = "https://www.azlyrics.com/lyrics/everlybrothers/allihavetodoisdream.html"
@@ -724,14 +877,56 @@ no10_21 = "https://www.azlyrics.com/lyrics/justinbieber/peaches.html"
 
 ```
 
-```{r}
+```{r, eval=FALSE, include=FALSE}
+# Put all 620 lyric urls into a list
+# Lyric urls were put into two separate lists first and were then combined to form one singular list in order for R to run efficiently
+URL1 = c(no1_58,no2_58,no3_58,no4_58,no5_58,no6_58,no7_58,no8_58,no9_58,no10_58,no1_59,no2_59,no3_59,no4_59,no5_59,no6_59,no7_59,no8_59,no9_59,no10_59,
+         no1_60,no2_60,no3_60,no4_60,no5_60,no6_60,no7_60,no8_60,no9_60,no10_60,no1_61,no2_61,no3_61,no4_61,no5_61,no6_61,no7_61,no8_61,no9_61,no10_61,
+         no1_62,no2_62,no3_62,no4_62,no5_62,no6_62,no7_62,no8_62,no9_62,no10_62,no1_63,no2_63,no3_63,no4_63,no5_63,no6_63,no7_63,no8_63,no9_63,no10_63,
+         no1_64,no2_64,no3_64,no4_64,no5_64,no6_64,no7_64,no8_64,no9_64,no10_64,no1_65,no2_65,no3_65,no4_65,no5_65,no6_65,no7_65,no8_65,no9_65,no10_65,
+         no1_66,no2_66,no3_66,no4_66,no5_66,no6_66,no7_66,no8_66,no9_66,no10_66,no1_67,no2_67,no3_67,no4_67,no5_67,no6_67,no7_67,no8_67,no9_67,no10_67,
+         no1_68,no2_68,no3_68,no4_68,no5_68,no6_68,no7_68,no8_68,no9_68,no10_68,no1_69,no2_69,no3_69,no4_69,no5_69,no6_69,no7_69,no8_69,no9_69,no10_69,
+         no1_70,no2_70,no3_70,no4_70,no5_70,no6_70,no7_70,no8_70,no9_70,no10_70,no1_71,no2_71,no3_71,no4_71,no5_71,no6_71,no7_71,no8_71,no9_71,no10_71,
+         no1_72,no2_72,no3_72,no4_72,no5_72,no6_72,no7_72,no8_72,no9_72,no10_72,no1_73,no2_73,no3_73,no4_73,no5_73,no6_73,no7_73,no8_73,no9_73,no10_73,
+         no1_74,no2_74,no3_74,no4_74,no5_74,no6_74,no7_74,no8_74,no9_74,no10_74,no1_75,no2_75,no3_75,no4_75,no5_75,no6_75,no7_75,no8_75,no9_75,no10_75,
+         no1_76,no2_76,no3_76,no4_76,no5_76,no6_76,no7_76,no8_76,no9_76,no10_76,no1_77,no2_77,no3_77,no4_77,no5_77,no6_77,no7_77,no8_77,no9_77,no10_77,
+         no1_78,no2_78,no3_78,no4_78,no5_78,no6_78,no7_78,no8_78,no9_78,no10_78,no1_79,no2_79,no3_79,no4_79,no5_79,no6_79,no7_79,no8_79,no9_79,no10_79,
+         no1_80,no2_80,no3_80,no4_80,no5_80,no6_80,no7_80,no8_80,no9_80,no10_80,no1_81,no2_81,no3_81,no4_81,no5_81,no6_81,no7_81,no8_81,no9_81,no10_81,
+         no1_82,no2_82,no3_82,no4_82,no5_82,no6_82,no7_82,no8_82,no9_82,no10_82,no1_83,no2_83,no3_83,no4_83,no5_83,no6_83,no7_83,no8_83,no9_83,no10_83,
+         no1_84,no2_84,no3_84,no4_84,no5_84,no6_84,no7_84,no8_84,no9_84,no10_84,no1_85,no2_85,no3_85,no4_85,no5_85,no6_85,no7_85,no8_85,no9_85,no10_85,
+         no1_86,no2_86,no3_86,no4_86,no5_86,no6_86,no7_86,no8_86,no9_86,no10_86)
 
-URL1 = c(no1_58,no2_58,no3_58,no4_58,no5_58,no6_58,no7_58,no8_58,no9_58, no10_58,no1_59,no2_59,no3_59,no4_59,no5_59,no6_59,no7_59,no8_59,no9_59,no10_59,no1_60,no2_60,no3_60,no4_60,no5_60,no6_60,no7_60,no8_60,no9_60,no10_60,no1_61,no2_61,no3_61,no4_61,no5_61,no6_61,no7_61,no8_61,no9_61,no10_61,no1_62,no2_62,no3_62,no4_62,no5_62,no6_62,no7_62,no8_62,no9_62,no10_62,no1_63,no2_63,no3_63,no4_63,no5_63,no6_63,no7_63,no8_63,no9_63,no10_63,no1_64,no2_64,no3_64,no4_64,no5_64,no6_64,no7_64,no8_64,no9_64,no10_64,no1_65,no2_65,no3_65,no4_65,no5_65,no6_65,no7_65,no8_65,no9_65,no10_65,no1_66,no2_66,no3_66,no4_66,no5_66,no6_66,no7_66,no8_66,no9_66,no10_66,no1_67,no2_67,no3_67,no4_67,no5_67,no6_67,no7_67,no8_67,no9_67,no10_67,no1_68,no2_68,no3_68,no4_68,no5_68,no6_68,no7_68,no8_68,no9_68,no10_68,no1_69,no2_69,no3_69,no4_69,no5_69,no6_69,no7_69,no8_69,no9_69,no10_69,no1_70,no2_70,no3_70,no4_70,no5_70,no6_70,no7_70,no8_70,no9_70,no10_70,no1_71,no2_71,no3_71,no4_71,no5_71,no6_71,no7_71,no8_71,no9_71,no10_71,no1_72,no2_72,no3_72,no4_72,no5_72,no6_72,no7_72,no8_72,no9_72,no10_72,no1_73,no2_73,no3_73,no4_73,no5_73,no6_73,no7_73,no8_73,no9_73,no10_73,no1_74,no2_74,no3_74,no4_74,no5_74,no6_74,no7_74,no8_74,no9_74,no10_74,no1_75,no2_75,no3_75,no4_75,no5_75,no6_75,no7_75,no8_75,no9_75,no10_75,no1_76,no2_76,no3_76,no4_76,no5_76,no6_76,no7_76,no8_76,no9_76,no10_76,no1_77,no2_77,no3_77,no4_77,no5_77,no6_77,no7_77,no8_77,no9_77,no10_77,no1_78,no2_78,no3_78,no4_78,no5_78,no6_78,no7_78,no8_78,no9_78,no10_78,no1_79,no2_79,no3_79,no4_79,no5_79,no6_79,no7_79,no8_79,no9_79,no10_79,no1_80,no2_80,no3_80,no4_80,no5_80,no6_80,no7_80,no8_80,no9_80,no10_80,no1_81,no2_81,no3_81,no4_81,no5_81,no6_81,no7_81,no8_81,no9_81,no10_81,no1_82,no2_82,no3_82,no4_82,no5_82,no6_82,no7_82,no8_82,no9_82,no10_82,no1_83,no2_83,no3_83,no4_83,no5_83,no6_83,no7_83,no8_83,no9_83,no10_83,no1_84,no2_84,no3_84,no4_84,no5_84,no6_84,no7_84,no8_84,no9_84,no10_84,no1_85,no2_85,no3_85,no4_85,no5_85,no6_85,no7_85,no8_85,no9_85,no10_85,no1_86,no2_86,no3_86,no4_86,no5_86,no6_86,no7_86,no8_86,no9_86,no10_86)
-
-URL2 = c(no1_87,no2_87,no3_87,no4_87,no5_87,no6_87,no7_87,no8_87,no9_87,no10_87,no1_88,no2_88,no3_88,no4_88,no5_88,no6_88,no7_88,no8_88,no9_88,no10_88,no1_89,no2_89,no3_89,no4_89,no5_89,no6_89,no7_89,no8_89,no9_89,no10_89,no1_90,no2_90,no3_90,no4_90,no5_90,no6_90,no7_90,no8_90,no9_90,no10_90,no1_91,no2_91,no3_91,no4_91,no5_91,no6_91,no7_91,no8_91,no9_91,no10_91,no1_92,no2_92,no3_92,no4_92,no5_92,no6_92,no7_92,no8_92,no9_92,no10_92,no1_93,no2_93,no3_93,no4_93,no5_93,no6_93,no7_93,no8_93,no9_93,no10_93,no1_94,no2_94,no3_94,no4_94,no5_94,no6_94,no7_94,no8_94,no9_94,no10_94,no1_95,no2_95,no3_95,no4_95,no5_95,no6_95,no7_95,no8_95,no9_95,no10_95,no1_96,no2_96,no3_96,no4_96,no5_96,no6_96,no7_96,no8_96,no9_96,no10_96,no1_97,no2_97,no3_97,no4_97,no5_97,no6_97,no7_97,no8_97,no9_97,no10_97,no1_98,no2_98,no3_98,no4_98,no5_98,no6_98,no7_98,no8_98,no9_98,no10_98,no1_99,no2_99,no3_99,no4_99,no5_99,no6_99,no7_99,no8_99,no9_99,no10_99,no1_00,no2_00,no3_00,no4_00,no5_00,no6_00,no7_00,no8_00,no9_00,no10_00,no1_01,no2_01,no3_01,no4_01,no5_01,no6_01,no7_01,no8_01,no9_01,no10_01,no1_02,no2_02,no3_02,no4_02,no5_02,no6_02,no7_02,no8_02,no9_02,no10_02,no1_03,no2_03,no3_03,no4_03,no5_03,no6_03,no7_03,no8_03,no9_03,no10_03,no1_04,no2_04,no3_04,no4_04,no5_04,no6_04,no7_04,no8_04,no9_04,no10_04,no1_05,no2_05,no3_05,no4_05,no5_05,no6_05,no7_05,no8_05,no9_05,no10_05,no1_06,no2_06,no3_06,no4_06,no5_06,no6_06,no7_06,no8_06,no9_06,no10_06,no1_07,no2_07,no3_07,no4_07,no5_07,no6_07,no7_07,no8_07,no9_07,no10_07,no1_08,no2_08,no3_08,no4_08,no5_08,no6_08,no7_08,no8_08,no9_08,no10_08,no1_09,no2_09,no3_09,no4_09,no5_09,no6_09,no7_09,no8_09,no9_09,no10_09,no1_10,no2_10,no3_10,no4_10,no5_10,no6_10,no7_10,no8_10,no9_10,no10_10,no1_11,no2_11,no3_11,no4_11,no5_11,no6_11,no7_11,no8_11,no9_11,no10_11,no1_14,no2_14,no3_14,no4_14,no5_14,no6_14,no7_14,no8_14,no9_14,no10_14,no1_15,no2_15,no3_15,no4_15,no5_15,no6_15,no7_15,no8_15,no9_15,no10_15,no1_16,no2_16,no3_16,no4_16,no5_16,no6_16,no7_16,no8_16,no9_16,no10_16,no1_17,no2_17,no3_17,no4_17,no5_17,no6_17,no7_17,no8_17,no9_17,no10_17,no1_18,no2_18,no3_18,no4_18,no5_18,no6_18,no7_18,no8_18,no9_18,no10_18,no1_19,no2_19,no3_19,no4_19,no5_19,no6_19,no7_19,no8_19,no9_19,no10_19,no1_20,no2_20,no3_20,no4_20,no5_20,no6_20,no7_20,no8_20,no9_20,no10_20,no1_21,no2_21,no3_21,no4_21,no5_21,no6_21,no7_21,no8_21,no9_21,no10_21)
+URL2 = c(no1_87,no2_87,no3_87,no4_87,no5_87,no6_87,no7_87,no8_87,no9_87,no10_87,no1_88,no2_88,no3_88,no4_88,no5_88,no6_88,no7_88,no8_88,no9_88,no10_88,
+         no1_89,no2_89,no3_89,no4_89,no5_89,no6_89,no7_89,no8_89,no9_89,no10_89,no1_90,no2_90,no3_90,no4_90,no5_90,no6_90,no7_90,no8_90,no9_90,no10_90,
+         no1_91,no2_91,no3_91,no4_91,no5_91,no6_91,no7_91,no8_91,no9_91,no10_91,no1_92,no2_92,no3_92,no4_92,no5_92,no6_92,no7_92,no8_92,no9_92,no10_92,
+         no1_93,no2_93,no3_93,no4_93,no5_93,no6_93,no7_93,no8_93,no9_93,no10_93,no1_94,no2_94,no3_94,no4_94,no5_94,no6_94,no7_94,no8_94,no9_94,no10_94,
+         no1_95,no2_95,no3_95,no4_95,no5_95,no6_95,no7_95,no8_95,no9_95,no10_95,no1_96,no2_96,no3_96,no4_96,no5_96,no6_96,no7_96,no8_96,no9_96,no10_96,
+         no1_97,no2_97,no3_97,no4_97,no5_97,no6_97,no7_97,no8_97,no9_97,no10_97,no1_98,no2_98,no3_98,no4_98,no5_98,no6_98,no7_98,no8_98,no9_98,no10_98,
+         no1_99,no2_99,no3_99,no4_99,no5_99,no6_99,no7_99,no8_99,no9_99,no10_99,no1_00,no2_00,no3_00,no4_00,no5_00,no6_00,no7_00,no8_00,no9_00,no10_00,
+         no1_01,no2_01,no3_01,no4_01,no5_01,no6_01,no7_01,no8_01,no9_01,no10_01,no1_02,no2_02,no3_02,no4_02,no5_02,no6_02,no7_02,no8_02,no9_02,no10_02,
+         no1_03,no2_03,no3_03,no4_03,no5_03,no6_03,no7_03,no8_03,no9_03,no10_03,no1_04,no2_04,no3_04,no4_04,no5_04,no6_04,no7_04,no8_04,no9_04,no10_04,
+         no1_05,no2_05,no3_05,no4_05,no5_05,no6_05,no7_05,no8_05,no9_05,no10_05,no1_06,no2_06,no3_06,no4_06,no5_06,no6_06,no7_06,no8_06,no9_06,no10_06,
+         no1_07,no2_07,no3_07,no4_07,no5_07,no6_07,no7_07,no8_07,no9_07,no10_07,no1_08,no2_08,no3_08,no4_08,no5_08,no6_08,no7_08,no8_08,no9_08,no10_08,
+         no1_09,no2_09,no3_09,no4_09,no5_09,no6_09,no7_09,no8_09,no9_09,no10_09,no1_10,no2_10,no3_10,no4_10,no5_10,no6_10,no7_10,no8_10,no9_10,no10_10,
+         no1_11,no2_11,no3_11,no4_11,no5_11,no6_11,no7_11,no8_11,no9_11,no10_11,no1_14,no2_14,no3_14,no4_14,no5_14,no6_14,no7_14,no8_14,no9_14,no10_14,
+         no1_15,no2_15,no3_15,no4_15,no5_15,no6_15,no7_15,no8_15,no9_15,no10_15,no1_16,no2_16,no3_16,no4_16,no5_16,no6_16,no7_16,no8_16,no9_16,no10_16,
+         no1_17,no2_17,no3_17,no4_17,no5_17,no6_17,no7_17,no8_17,no9_17,no10_17,no1_18,no2_18,no3_18,no4_18,no5_18,no6_18,no7_18,no8_18,no9_18,no10_18,
+         no1_19,no2_19,no3_19,no4_19,no5_19,no6_19,no7_19,no8_19,no9_19,no10_19,no1_20,no2_20,no3_20,no4_20,no5_20,no6_20,no7_20,no8_20,no9_20,no10_20,
+         no1_21,no2_21,no3_21,no4_21,no5_21,no6_21,no7_21,no8_21,no9_21,no10_21)
 
 URLs = c(URL1, URL2)
+save(URLs, file = "URLs.Rda")
+```
 
+```{r}
+load("songs.Rda")
+load("URLs.Rda")
+```
+
+```{r} 
+data_songs_list = list(tab_58, tab_59, tab_60, tab_61, tab_62, tab_63, tab_64, tab_65, tab_66, tab_67, tab_68, tab_69, tab_70, tab_71, tab_72, tab_73, tab_74, tab_75, tab_76, tab_77, tab_78, tab_79, tab_80, tab_81, tab_82, tab_83, tab_84, tab_85, tab_86, tab_87, tab_88, tab_89, tab_90, tab_91, tab_92, tab_93, tab_94, tab_95, tab_96, tab_97, tab_98, tab_99, tab_00, tab_01, tab_02, tab_03, tab_04, tab_05, tab_06, tab_07, tab_08, tab_09, tab_10, tab_11, tab_14, tab_15, tab_16, tab_17, tab_18, tab_19, tab_20, tab_21)
+
+data_songs_list
 ```
 
 ```{r}
@@ -796,150 +991,7 @@ filter(!lyrics %in% stop_words$word)
 #  - total amount of unique (or copied) words / total amount of words 
 #  - (total amount of copied (or unique) phrases / sentences) / (total amount of sentences)
 
-```{r}
-tab_58 = songs(url_58)
- tab_58 = tab_58 %>% mutate(Year = 1958)
- tab_59 = songs(url_59)
- tab_59 = tab_59 %>% mutate(Year = 1959)
- tab_60 = songs(url_60)
- tab_60 = tab_60 %>% mutate(Year = 1960)
- tab_61 = songs(url_61)
- tab_61 = tab_61 %>% mutate(Year = 1961)
- tab_62 = songs(url_62)
- tab_62 = tab_62 %>% mutate(Year = 1962)
- tab_63 = songs(url_63)
- tab_63 = tab_63 %>% mutate(Year = 1963)
- tab_64 = songs(url_64)
- tab_64 = tab_64 %>% mutate(Year = 1964)
- tab_65 = songs(url_65)
- tab_65 = tab_65 %>% mutate(Year = 1965)
- tab_66 = songs(url_66)
- tab_66 = tab_66 %>% mutate(Year = 1966)
- tab_67 = songs(url_67)
- tab_67 = tab_67 %>% mutate(Year = 1967)
- tab_68 = songs(url_68)
- tab_68 = tab_68 %>% mutate(Year = 1968)
- tab_69 = songs(url_69)
- tab_69 = tab_69 %>% mutate(Year = 1969)
- tab_70 = songs(url_70)
- tab_70 = tab_70 %>% mutate(Year = 1970)
- tab_71 = songs(url_71)
- tab_71 = tab_71 %>% mutate(Year = 1971)
- tab_72 = songs(url_72)
- tab_72 = tab_72 %>% mutate(Year = 1972)
- tab_73 = songs(url_73)
- tab_73 = tab_73 %>% mutate(Year = 1973)
- tab_74 = songs(url_74)
- tab_74 = tab_74 %>% mutate(Year = 1974)
- tab_75 = songs(url_75)
- tab_75 = tab_75 %>% mutate(Year = 1975)
- tab_76 = songs(url_76)
- tab_76 = tab_76 %>% mutate(Year = 1976)
- tab_77 = songs(url_77)
- tab_77 = tab_77 %>% mutate(Year = 1977)
- tab_78 = songs(url_78)
- tab_78 = tab_78 %>% mutate(Year = 1978)
- tab_79 = songs(url_79)
- tab_79 = tab_79 %>% mutate(Year = 1979)
- tab_80 = songs(url_80)
- tab_80 = tab_80 %>% mutate(Year = 1980)
- tab_81 = songs(url_81)
- tab_81 = tab_81 %>% mutate(Year = 1981)
- tab_82 = songs(url_82)
- tab_82 = tab_82 %>% mutate(Year = 1982)
- tab_83 = songs(url_83)
- tab_83 = tab_83 %>% mutate(Year = 1983)
- tab_84 = songs(url_84)
- tab_84 = tab_84 %>% mutate(Year = 1984)
- tab_85 = songs(url_85)
- tab_85 = tab_85 %>% mutate(Year = 1985)
- tab_86 = songs(url_86)
- tab_86 = tab_86 %>% mutate(Year = 1986)
- tab_87 = songs(url_87)
- tab_87 = tab_87 %>% mutate(Year = 1987)
- tab_88 = songs(url_88)
- tab_88 = tab_88 %>% mutate(Year = 1988)
- tab_89 = songs(url_89)
- tab_89 = tab_89 %>% mutate(Year = 1989)
- tab_90 = songs(url_90)
- tab_91 = songs(url_92)
- tab_90 = tab_90 %>% mutate(Year = 1990)
- tab_91 = songs(url_91)
- tab_91 = tab_91 %>% mutate(Year = 1991)
- tab_92 = songs(url_92)
- tab_92 = tab_92 %>% mutate(Year = 1992)
- tab_93 = songs(url_93)
- tab_93 = tab_93 %>% mutate(Year = 1993)
- tab_94 = songs(url_94)
- tab_94 = tab_94 %>% mutate(Year = 1994)
- tab_95 = songs(url_95)
- tab_95 = tab_95 %>% mutate(Year = 1995)
- tab_96 = songs(url_96)
- tab_96 = tab_96 %>% mutate(Year = 1996)
- tab_97 = songs(url_97)
- tab_97 = tab_97 %>% mutate(Year = 1997)
- tab_98 = songs(url_98)
- tab_98 = tab_98 %>% mutate(Year = 1998)
- tab_99 = songs(url_99)
- tab_99 = tab_99 %>% mutate(Year = 1999)
- tab_00 = songs(url_00)
- tab_00 = tab_00 %>% mutate(Year = 2000)
- tab_01 = songs(url_01)
- tab_01 = tab_01 %>% mutate(Year = 2001)
- tab_02 = songs(url_02)
- tab_02 = tab_02 %>% mutate(Year = 2002)
- tab_03 = songs(url_03)
- tab_03 = tab_03 %>% mutate(Year = 2003)
- tab_04 = songs(url_04)
- tab_04 = tab_04 %>% mutate(Year = 2004)
- tab_05 = songs(url_05)
- tab_05 = tab_05 %>% mutate(Year = 2005)
- tab_06 = songs(url_06)
- tab_06 = tab_06 %>% mutate(Year = 2006)
- tab_07 = songs(url_07)
- tab_07 = tab_07 %>% mutate(Year = 2007)
- tab_08 = songs(url_08)
- tab_08 = tab_08 %>% mutate(Year = 2008)
- tab_09 = songs(url_09)
- tab_09 = tab_09 %>% mutate(Year = 2009)
- tab_10 = songs(url_10)
- tab_10 = tab_10 %>% mutate(Year = 2010)
- tab_11 = songs(url_11)
- tab_11 = tab_11 %>% mutate(Year = 2011)
- tab_12 = songs(url_12)
- tab_12 = tab_12 %>% mutate(Year = 2012)
- tab_13 = songs(url_13)
- tab_13 = tab_13 %>% mutate(Year = 2013)
- tab_14 = songs(url_14)
- tab_14 = tab_14 %>% mutate(Year = 2014)
- tab_15 = songs(url_15)
- tab_15 = tab_15 %>% mutate(Year = 2015)
- tab_16 = songs(url_16)
- tab_16 = tab_16 %>% mutate(Year = 2016)
- tab_17 = songs(url_17)
- tab_17 = tab_17 %>% mutate(Year = 2017)
- tab_18 = songs(url_18)
- tab_18 = tab_18 %>% mutate(Year = 2018)
- tab_19 = songs(url_19)
- tab_19 = tab_19 %>% mutate(Year = 2019)
- tab_20 = songs(url_20)
- tab_20 = tab_20 %>% mutate(Year = 2020)
- tab_21 = songs(url_21)
- tab_21 = tab_21 %>% mutate(Year = 2021)
- 
- tab_00
-```
 
-```{r}
-data_songs = rbind(tab_58, tab_59, tab_60, tab_61, tab_62, tab_63, tab_64, tab_65, tab_66, tab_67, tab_68, tab_69, tab_70, tab_71, tab_72, tab_73, tab_74, tab_75, tab_76, tab_77, tab_78, tab_79, tab_80, tab_81, tab_82, tab_83, tab_84, tab_85, tab_86, tab_87, tab_88, tab_89, tab_90, tab_91, tab_92, tab_93, tab_94, tab_95, tab_96, tab_97, tab_98, tab_99, tab_00, tab_01, tab_02, tab_03, tab_04, tab_05, tab_06, tab_07, tab_08, tab_09, tab_10, tab_11, tab_14, tab_15, tab_16, tab_17, tab_18, tab_19, tab_20, tab_21)
-
-data_songs = data_songs %>% transform(No. = as.numeric(No.))
- data_songs = data_songs %>% group_by(No.) %>% arrange(No.)
- data_songs
- 
-data_songs_list = list(tab_58, tab_59, tab_60, tab_61, tab_62, tab_63, tab_64, tab_65, tab_66, tab_67, tab_68, tab_69, tab_70, tab_71, tab_72, tab_73, tab_74, tab_75, tab_76, tab_77, tab_78, tab_79, tab_80, tab_81, tab_82, tab_83, tab_84, tab_85, tab_86, tab_87, tab_88, tab_89, tab_90, tab_91, tab_92, tab_93, tab_94, tab_95, tab_96, tab_97, tab_98, tab_99, tab_00, tab_01, tab_02, tab_03, tab_04, tab_05, tab_06, tab_07, tab_08, tab_09, tab_10, tab_11, tab_14, tab_15, tab_16, tab_17, tab_18, tab_19, tab_20, tab_21)
-
-data_songs_list
 
 ```
 
