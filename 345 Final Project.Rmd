@@ -918,7 +918,8 @@ URLs = c(URL1, URL2)
 save(URLs, file = "URLs.Rda")
 ```
 
-```{r}
+```{r, include=FALSE}
+# Load dataframe of songs and list of lyric urls for future use
 load("songs.Rda")
 load("URLs.Rda")
 ```
