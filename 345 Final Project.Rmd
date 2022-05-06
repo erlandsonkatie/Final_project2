@@ -1,11 +1,11 @@
 ---
 title: "345 Final Project"
-author: "Abby Schmidt, Colin Kalsbeek, Katie Erlandson"
+author: "Colin Kalsbeek, Abby Schmidt, Katie Erlandson"
 date: "5/6/2022"
 output: word_document
 ---
 
-```{r setup, include=FALSE}
+```{r, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 # Load all necessary packages
 library(tidyverse)
@@ -13,11 +13,12 @@ library(tidytext)
 library(rvest)
 library(tm)
 library(textclean)
+library(data.table)
 ```
 
-We were tasked with evaluating the repetitiveness of the most popular songs over time.  The goal of this project was to determine if song repetitiveness has changed over time, and find any other relative patterns that occurred within the data.  This was accomplished in three main steps:  creating a list of top songs from 1958 to 2021, gathering the lyrics, and generating measures of song repetitiveness.
+<p>We were tasked with evaluating the repetitiveness of the most popular songs over time.  The goal of this project was to determine if song repetitiveness has changed over time, and find any other relative patterns that occurred within the data.  This was accomplished in three main steps:  creating a list of top songs from 1958 to 2021, gathering the lyrics, and generating measures of song repetitiveness.
 
-The first step involves creating a list of the top songs from 1958 to 2021.  This was done by reading in each year's 'Billboard Year-End Hot 100 Singles' url from Wikipedia.  The data gathered from the urls proved to have some inconsistencies.  For example, the billboard chart from the year 1958 only includes 50 songs while every other year provides the top 100 songs.  Also, the urls for the years 2012 and 2013 read in as being empty and contained no data, so the songs for these years were omitted from analysis.
+<p>The first step involves creating a list of the top songs from 1958 to 2021.  This was done by reading in each year's 'Billboard Year-End Hot 100 Singles' url from Wikipedia.  The data gathered from the urls proved to have some inconsistencies.  For example, the billboard chart from the year 1958 only includes 50 songs while every other year provides the top 100 songs.  Also, the urls for the years 2012 and 2013 read in as being empty and contained no data, so the songs for these years were omitted from analysis.
 
 ```{r, eval=FALSE, include=FALSE}
 # urls for top songs of each year 1958-2021
@@ -90,7 +91,7 @@ url_21 = "https://en.wikipedia.org/wiki/Billboard_Year-End_Hot_100_singles_of_20
  
 ```
 
-The function 'songs' was then created in order to take each year's url data and transform it into table format.  This function takes in a url and a number n that can range from 1 to 100 with its default value being 10.  The input n represents the number of songs to be returned for each year.  Recall that the 'songs' function can only return up to 50 songs for the year 1958, but can generate up to 100 songs for every other year.  The tables that this function returns include the song title, artist, and number ranking on the billboard chart.  The 'songs' function was called for each year in order to generate a table of the top 10 songs for each year from 1958 to 2021.  A column designating year was then added to each year's table.  Lastly, all of the separate year tables were binded together by row to form a single data frame containing 620 songs. 
+<p>The function 'songs' was then created in order to take each year's url data and transform it into table format.  This function takes in a url and a number n that can range from 1 to 100 with its default value being 10.  The input n represents the number of songs to be returned for each year.  Recall that the 'songs' function can only return up to 50 songs for the year 1958, but can generate up to 100 songs for every other year.  The tables that this function returns include the song title, artist, and number ranking on the billboard chart.  The 'songs' function was called for each year in order to generate a table of the top 10 songs for each year from 1958 to 2021.  A column designating year was then added to each year's table.  Lastly, all of the separate year tables were binded together by row to form a single data frame containing 620 songs. 
 
 ```{r, eval=FALSE, include=FALSE}
 # Function 'songs' takes in an object x and a number n that can range from 1 to 100 and its default value is 10
@@ -250,29 +251,29 @@ data_songs = data_songs %>% transform(No. = as.numeric(No.))
 save(data_songs, file = "songs.Rda")
 ```
  
-The second step involves gathering the lyrics for the list of top songs that was previously created.  This was done by reading in each song's url from 'azlyrics.com'.  Multiple songs' lyrics were unable to be found on the 'azlyrics' site and their corresponding objects were made to be empty.  All 620 lyric objects were then put into a list to prepare for analysis.  In order to efficiently generate a list this large, the url objects had to be split to make two separate lists that were then combined into a single list called 'URLs'.
+<p>The second step involves gathering the lyrics for the list of top songs that was previously created.  This was done by reading in each song's url from 'azlyrics.com'.  Multiple songs' lyrics were unable to be found on the 'azlyrics' site and their corresponding objects were made to be empty.  All 620 lyric objects were then put into a list to prepare for analysis.  In order to efficiently generate a list this large, the url objects had to be split to make two separate lists that were then combined into a single list called 'URLs'.
 
 ```{r, eval=FALSE, include=FALSE}
 # urls for lyrics
 no1_58 = "https://www.azlyrics.com/lyrics/engelberthumperdinck/volare.html"
 no2_58 = "https://www.azlyrics.com/lyrics/everlybrothers/allihavetodoisdream.html"
 no3_58 = "https://www.azlyrics.com/lyrics/elvispresley/ibegofyou.html"
-no4_58 = " " # NULL # not on az 
-no5_58 = " " # NULL # not on az 
+no4_58 = "https://www.azlyrics.com/lyrics/elvispresley/ibegofyou.html"
+no5_58 = "https://www.azlyrics.com/lyrics/andywilliams/sailalongsilverymoon.html"
 no6_58 = "https://www.azlyrics.com/lyrics/andywilliams/sailalongsilverymoon.html"
 no7_58 = "https://www.azlyrics.com/lyrics/perrycomo/catchafallingstar.html"
-no8_58 = " " # NULL # not on az -> "tequila" x3 = entire song
+no8_58 = "https://www.azlyrics.com/lyrics/barrymanilow/itsallinthegame.html"
 no9_58 = "https://www.azlyrics.com/lyrics/barrymanilow/itsallinthegame.html"
 no10_58 = "https://www.azlyrics.com/lyrics/deanmartin/returntome.html"
 no1_59 = "https://www.azlyrics.com/lyrics/johnnyhorton/thebattleofneworleans.html"
 no2_59 = "https://www.azlyrics.com/lyrics/bobbydarin/macktheknife.html"
-no3_59 = " " # NULL # not on az 
+no3_59 = "https://www.azlyrics.com/lyrics/barrymanilow/venus.html" 
 no4_59 = "https://www.azlyrics.com/lyrics/barrymanilow/venus.html"
 no5_59 = "https://www.azlyrics.com/lyrics/paulanka/lonelyboy.html"
 no6_59 = "https://www.azlyrics.com/lyrics/bobbydarin/dreamlover.html"
 no7_59 = "https://www.azlyrics.com/lyrics/tokens/thethreebellsthejimmybrownsong.html"
 no8_59 = "https://www.azlyrics.com/lyrics/fleetwoods/comesoftlytome.html"
-no9_59 = " " # NULL # not on az (loose covers are by neil diamond and knight paul)
+no9_59 = "https://www.azlyrics.com/lyrics/paulmccartney/kansascity.html" 
 no10_59 = "https://www.azlyrics.com/lyrics/fleetwoods/mrblue.html"
 no1_60 = "https://www.azlyrics.com/lyrics/julielondon/themefromasummerplace.html"
 no2_60 = "https://www.azlyrics.com/lyrics/jimreeves/hellhavetogo.html"
@@ -281,35 +282,35 @@ no4_60 = "https://www.azlyrics.com/lyrics/johnnypreston/runningbear.html"
 no5_60 = "https://www.azlyrics.com/lyrics/markdinning/teenangel.html"
 no6_60 = "https://www.azlyrics.com/lyrics/brendalee/imsorry.html"
 no7_60 = "https://www.azlyrics.com/lyrics/elvispresley/itsnowornever.html"
-no8_60 = " " # NULL # not on az
+no8_60 = "https://www.azlyrics.com/lyrics/elvispresley/stuckonyou.html"
 no9_60 = "https://www.azlyrics.com/lyrics/elvispresley/stuckonyou.html"
 no10_60 = "https://www.azlyrics.com/lyrics/chubbychecker/thetwist.html"
 no1_61 = "https://www.azlyrics.com/lyrics/garylewistheplayboys/tossinandturnin.html"
 no2_61 = "https://www.azlyrics.com/lyrics/patsycline/ifalltopieces.html"
-no3_61 = " " # NULL # not on az
+no3_61 = "https://www.azlyrics.com/lyrics/patsycline/ifalltopieces.html" 
 no4_61 = "https://www.azlyrics.com/lyrics/royorbison/crying.html"
 no5_61 = "https://www.azlyrics.com/lyrics/delshannon/runaway.html"
 no6_61 = "https://www.azlyrics.com/lyrics/nittygrittydirtband/mytruestory.html"
 no7_61 = "https://www.azlyrics.com/lyrics/chubbychecker/ponytime.html"
-no8_61 = " " # NULL # not on az lyrics
-no9_61 = " " # NULL # not on az
+no8_61 = "https://www.azlyrics.com/lyrics/chubbychecker/ponytime.html" 
+no9_61 = "https://www.azlyrics.com/lyrics/elvispresley/woodenheartmussidenn.html" 
 no10_61 = "https://www.azlyrics.com/lyrics/elvispresley/woodenheartmussidenn.html"
 no1_62 = "https://www.azlyrics.com/lyrics/drifters/strangerontheshore.html"
 no2_62 = "https://www.azlyrics.com/lyrics/raycharles/icantstoplovingyou.html"
 no3_62 = "https://www.azlyrics.com/lyrics/marvelettes/mashedpotatotime.html"
 no4_62 = "https://www.azlyrics.com/lyrics/bobbyvinton/rosesareredmylove.html"
-no5_62 = " " # NULL # not on az lyrics
+no5_62 = "https://www.azlyrics.com/lyrics/bobbyvinton/rosesareredmylove.html"
 no6_62 = "https://www.azlyrics.com/lyrics/carpenters/johnnyangel.html"
 no7_62 = "https://www.azlyrics.com/lyrics/littleeva/thelocomotion.html"
-no8_62 = " " # NULL # not on az lyrics
+no8_62 = "https://www.azlyrics.com/lyrics/littleeva/thelocomotion.html"
 no9_62 = "https://www.azlyrics.com/lyrics/chubbychecker/thetwist.html"
-no10_62 = " " # NULL # not on az 
+no10_62 = "https://www.azlyrics.com/lyrics/chubbychecker/thetwist.html"
 no1_63 = "https://www.azlyrics.com/lyrics/beachboys/surfinusa.html"
 no2_63 = "https://www.azlyrics.com/lyrics/skeeterdavis/theendoftheworld.html"
 no3_63 = "https://www.azlyrics.com/lyrics/jandean/rhythmoftherain.html"
 no4_63 = "https://www.azlyrics.com/lyrics/chiffons/hessofine.html"
 no5_63 = "https://www.azlyrics.com/lyrics/barrymanilow/bluevelvet.html"
-no6_63 = " " # NULL # not on az lyrics 
+no6_63 = "https://www.azlyrics.com/lyrics/steviewonder/fingertipspart2.html" 
 no7_63 = "https://www.azlyrics.com/lyrics/steviewonder/fingertipspart2.html"
 no8_63 = "https://www.azlyrics.com/lyrics/andywilliams/cantgetusedtolosingyou.html"
 no9_63 = "https://www.azlyrics.com/lyrics/angels-usa/myboyfriendsback.html"
@@ -340,10 +341,10 @@ no3_66 = "https://www.azlyrics.com/lyrics/jimmyruffin/whatbecomesofthebrokenhear
 no4_66 = "https://www.azlyrics.com/lyrics/monkees/lasttraintoclarksville.html"
 no5_66 = "https://www.azlyrics.com/lyrics/gloriagaynor/reachoutillbethere.html"
 no6_66 = "https://www.azlyrics.com/lyrics/nancysinatra/thesebootsaremadeforwalkin.html"
-no7_66 = " " # NULL # not on az 
+no7_66 = "https://www.azlyrics.com/lyrics/franksinatra/strangersinthenight.html"
 no8_66 = "https://www.azlyrics.com/lyrics/franksinatra/strangersinthenight.html"
 no9_66 = "https://www.azlyrics.com/lyrics/paulreveretheraiders/kicks.html"
-no10_66 = " " # NULL # not on az
+no10_66 = "https://www.azlyrics.com/lyrics/lulu/tosirwithlove.html"
 no1_67 = "https://www.azlyrics.com/lyrics/lulu/tosirwithlove.html"
 no2_67 = "https://www.azlyrics.com/lyrics/boxtops/theletter.html"
 no3_67 = "https://www.azlyrics.com/lyrics/bobbiegentry/odetobilliejoe.html"
@@ -361,9 +362,9 @@ no4_68 = "https://www.azlyrics.com/lyrics/otisredding/sittinonthedockofthebay.ht
 no5_68 = "https://www.azlyrics.com/lyrics/rascals/peoplegottobefree.html"
 no6_68 = "https://www.azlyrics.com/lyrics/cream/sunshineofyourlove.html"
 no7_68 = "https://www.azlyrics.com/lyrics/barrymanilow/thisguysinlovewithyou.html"
-no8_68 = " " # NULL # not on az 
+no8_68 = "https://www.azlyrics.com/lyrics/barrymanilow/thisguysinlovewithyou.html"
 no9_68 = "https://www.azlyrics.com/lyrics/simongarfunkel/mrsrobinson.html"
-no10_68 = " " #NULL # not on az 
+no10_68 = "https://www.azlyrics.com/lyrics/archies/sugarsugar.html" 
 no1_69 = "https://www.azlyrics.com/lyrics/archies/sugarsugar.html"
 no2_69 = "https://www.azlyrics.com/lyrics/5thdimension/aquariusletthesunshinein.html"
 no3_69 = "https://www.azlyrics.com/lyrics/toto/icantgetnexttoyou.html"
@@ -397,9 +398,9 @@ no10_71 = "https://www.azlyrics.com/lyrics/tonyorlandodawn/knockthreetimes.html"
 no1_72 = "https://www.azlyrics.com/lyrics/robertaflack/thefirsttimeeverisawyourface.html"
 no2_72 = "https://www.azlyrics.com/lyrics/gilbertosullivan/aloneagainnaturally.html"
 no3_72 = "https://www.azlyrics.com/lyrics/donmclean/americanpie.html"
-no4_72 = " " #NULL # not on az 
+no4_72 = "https://www.azlyrics.com/lyrics/donmclean/americanpie.html" 
 no5_72 = "https://www.azlyrics.com/lyrics/sammydavisjr/thecandyman.html"
-no6_72 = " " #NULL # not on az 
+no6_72 = "https://www.azlyrics.com/lyrics/billwithers/leanonme.html" 
 no7_72 = "https://www.azlyrics.com/lyrics/billwithers/leanonme.html"
 no8_72 = "https://www.azlyrics.com/lyrics/macdavis/babydontgethookedonme.html"
 no9_72 = "https://www.azlyrics.com/lyrics/melanie/brandnewkey.html"
@@ -420,8 +421,8 @@ no3_74 = "https://www.azlyrics.com/lyrics/barrywhite/lovestheme.html"
 no4_74 = "https://www.azlyrics.com/lyrics/redbone/comeandgetyourlove.html"
 no5_74 = "https://www.azlyrics.com/lyrics/jackson5/dancingmachine.html"
 no6_74 = "https://www.azlyrics.com/lyrics/grandfunkrailroad/thelocomotion.html"
-no7_74 = " " #NULL # not on az
-no8_74 = " " #NULL # not on az
+no7_74 = "https://www.azlyrics.com/lyrics/grandfunkrailroad/thelocomotion.html"
+no8_74 = "https://www.azlyrics.com/lyrics/eltonjohn/bennieandthejets.html"
 no9_74 = "https://www.azlyrics.com/lyrics/eltonjohn/bennieandthejets.html"
 no10_74 = "https://www.azlyrics.com/lyrics/macdavis/onehellofawoman.html"
 no1_75 = "https://www.azlyrics.com/lyrics/captaintennille/lovewillkeepustogether.html"
@@ -436,24 +437,24 @@ no9_75 = "https://www.azlyrics.com/lyrics/neilsedaka/laughterintherain.html"
 no10_75 = "https://www.azlyrics.com/lyrics/eagles/oneofthesenights.html"
 no1_76 = "https://www.azlyrics.com/lyrics/wings/sillylovesongs.html"
 no2_76 = "https://www.azlyrics.com/lyrics/eltonjohn/dontgobreakingmyheart.html"
-no3_76 = " " #NULL # not on az 
+no3_76 = "https://www.azlyrics.com/lyrics/eltonjohn/dontgobreakingmyheart.html" 
 no4_76 = "https://www.azlyrics.com/lyrics/fourseasons/december1963ohwhatanight.html"
 no5_76 = "https://www.azlyrics.com/lyrics/wildcherry/playthatfunkymusic.html"
 no6_76 = "https://www.azlyrics.com/lyrics/manhattans/kissandsaygoodbye.html"
 no7_76 = "https://www.azlyrics.com/lyrics/thelmahouston/lovemachine.html"
 no8_76 = "https://www.azlyrics.com/lyrics/paulsimon/50waystoleaveyourlover.html"
 no9_76 = "https://www.azlyrics.com/lyrics/garywright/loveisalive.html"
-no10_76 = " " #NULL # not on az
+no10_76 = "https://www.azlyrics.com/lyrics/garywright/loveisalive.html" 
 no1_77 = "https://www.azlyrics.com/lyrics/rodstewart/tonightsthenightgonnabealright.html"
 no2_77 = "https://www.azlyrics.com/lyrics/andygibb/ijustwanttobeyoureverything.html"
 no3_77 = "https://www.azlyrics.com/lyrics/emotions/bestofmylove.html"
 no4_77 = "https://www.azlyrics.com/lyrics/barbrastreisand/evergreen.html"
 no5_77 = "https://www.azlyrics.com/lyrics/barbaramandrell/angelinyourarms.html"
-no6_77 = " " #NULL # not on az 
+no6_77 = "https://www.azlyrics.com/lyrics/thelmahouston/dontleavemethisway.html"  
 no7_77 = "https://www.azlyrics.com/lyrics/thelmahouston/dontleavemethisway.html"
 no8_77 = "https://www.azlyrics.com/lyrics/ritacoolidge/yourlovehasliftedmehigherandhigher.html"
-no9_77 = " " #NULL # not on az
-no10_77 = " " #NULL # "  "  " 
+no9_77 = "https://www.azlyrics.com/lyrics/ritacoolidge/yourlovehasliftedmehigherandhigher.html" 
+no10_77 = "https://www.azlyrics.com/lyrics/andygibb/shadowdancing.html"
 no1_78 = "https://www.azlyrics.com/lyrics/andygibb/shadowdancing.html"
 no2_78 = "https://www.azlyrics.com/lyrics/beegees/nightfever.html"
 no3_78 = "https://www.azlyrics.com/lyrics/debbyboone/youlightupmylife.html"
@@ -548,8 +549,8 @@ no1_87 = "https://www.azlyrics.com/lyrics/bangles/walklikeanegyptian.html"
 no2_87 = "https://www.azlyrics.com/lyrics/heart/alone.html"
 no3_87 = "https://www.azlyrics.com/lyrics/gregoryabbott/shakeyoudown.html"
 no4_87 = "https://www.azlyrics.com/lyrics/whitneyhouston/iwannadancewithsomebody.html"
-no5_87 = " " # NULL # not on az
-no6_87 = " " #NULL # "  "  "
+no5_87 = "https://www.azlyrics.com/lyrics/whitneyhouston/iwannadancewithsomebody.html" 
+no6_87 = "https://www.azlyrics.com/lyrics/whitesnake/hereigoagain125279.html" 
 no7_87 = "https://www.azlyrics.com/lyrics/whitesnake/hereigoagain125279.html"
 no8_87 = "https://www.azlyrics.com/lyrics/brucehornsby/thewayitis.html"
 no9_87 = "https://www.azlyrics.com/lyrics/bobseger/shakedown.html"
@@ -588,7 +589,7 @@ no1_91 = "https://www.azlyrics.com/lyrics/bryanadams/everythingidoidoitforyou.ht
 no2_91 = "https://www.azlyrics.com/lyrics/bryanadams/everythingidoidoitforyou.html"
 no3_91 = "https://www.azlyrics.com/lyrics/bobsinclar/everybodydancenow.html"
 no4_91 = "https://www.azlyrics.com/lyrics/paulaabdul/rushrush.html"
-no5_91 = " " # NULL # not on az
+no5_91 = "https://www.azlyrics.com/lyrics/emf/unbelievable.html"
 no6_91 = "https://www.azlyrics.com/lyrics/emf/unbelievable.html"
 no7_91 = "https://www.azlyrics.com/lyrics/extreme/morethanwords.html"
 no8_91 = "https://www.azlyrics.com/lyrics/pyt/ilikethewaythekissinggame.html"
@@ -612,7 +613,7 @@ no5_93 = "https://www.azlyrics.com/lyrics/silk/freakme.html"
 no6_93 = "https://www.azlyrics.com/lyrics/swv/weak.html"
 no7_93 = "https://www.azlyrics.com/lyrics/shai/ifieverfallinlove.html"
 no8_93 = "https://www.azlyrics.com/lyrics/mariahcarey/dreamlover.html"
-no9_93 = " " # NULL # not on az
+no9_93 = "https://www.azlyrics.com/lyrics/mariahcarey/dreamlover.html"
 no10_93 = "https://www.azlyrics.com/lyrics/snow/informer.html"
 no1_94 = "https://www.azlyrics.com/lyrics/aceofbase/thesign.html"
 no2_94 = "https://www.azlyrics.com/lyrics/all4one/iswear.html"
@@ -919,91 +920,80 @@ save(URLs, file = "URLs.Rda")
 ```
 
 ```{r, include=FALSE}
-# Load dataframe of songs and list of lyric urls for future use
+# Load data frame of songs and list of lyric urls for future use
 load("songs.Rda")
 load("URLs.Rda")
 ```
 
-```{r} 
-data_songs_list = list(tab_58, tab_59, tab_60, tab_61, tab_62, tab_63, tab_64, tab_65, tab_66, tab_67, tab_68, tab_69, tab_70, tab_71, tab_72, tab_73, tab_74, tab_75, tab_76, tab_77, tab_78, tab_79, tab_80, tab_81, tab_82, tab_83, tab_84, tab_85, tab_86, tab_87, tab_88, tab_89, tab_90, tab_91, tab_92, tab_93, tab_94, tab_95, tab_96, tab_97, tab_98, tab_99, tab_00, tab_01, tab_02, tab_03, tab_04, tab_05, tab_06, tab_07, tab_08, tab_09, tab_10, tab_11, tab_14, tab_15, tab_16, tab_17, tab_18, tab_19, tab_20, tab_21)
+```{r, include=FALSE}
+# REPETITION CHUNK:
+snowball = stop_words %>% filter( lexicon == "snowball") %>% pull(word) %>% sort()
 
-data_songs_list
-```
-
-```{r}
-# function takes a url 
-# gives lyrics 
-# need to add repetitiveness test inside function. 
-# needs S.G. to give "br+ div" (on lyrics without overhead/title)
-lyrics = function(x) {
+# takes url 
+# outputs two percentages: 
+#  - sum of top ten most repeated words / total words
+#  - total repeated words / total words
+rep_scores = function(x) {
   lyrics_url = x 
   B = read_html(lyrics_url)
   lyrics = html_nodes(B, "br+ div")
   lyrics = html_text(lyrics, trim = F) %>% .[1]
-  lyrics = replace_white(lyrics)
-  return(lyrics)
+  lyrics = replace_white(lyrics) # removes escape characters
+  table =  tibble(text = lyrics)
+  
+  table = table %>% unnest_tokens(words, text) 
+  table = table %>% filter(!words %in% snowball) # filtering out snowball stop words
+  n = count(table)
+  total_words = n$n # storing total amount of words in each song (for standardization)
+  
+  table = table %>% count(words) %>% filter(!n == 1) 
+  rep_words = sum(table$n) / total_words 
+# storing total amount of repeated words / total words 
+  table = table %>% arrange(desc(n)) %>% head(10) 
+  top_ten = sum(table$n) / total_words
+# storing sum of top ten most repeated words / total words  
+  return(c(top_ten, rep_words))
 }
 
 ```
 
+```{r, eval=FALSE, include=FALSE}
+time = runif(1, 15, 45)
 
-```{r}
-# REPETITION CHUNK:
-# need 2 or more measures - (words and phrases (and verses))
-# stop_words has (SMART, snowball, onix) -> all might take too many words out
-# total words in c() would be useful -> only possible after tokens
-# ^> total unique words too 
+wait <- function(wait.time = time){
+  now <- proc.time()[3]
+  while(proc.time()[3] < (now + wait.time)) dum <- 0
+}
 
-lyrics(no1_64)
+df = data.frame("yuh")
+C = c("top ten", "% repeated")
+df = cbind(df, C)
+x = NULL
+y = NULL
 
-testing = tibble(text = lyrics(no7_65)) # formatting to token-ize
-table = testing %>% unnest_tokens(words, text) # token by words
-# total n 
-n = count(table) 
-total_words = n$n # total amount of words 
-table = table %>% count(words)
-# total repeated words 
-table %>% filter(!n == 1) 
-# top ten 
-table %>% arrange(desc(n)) %>% head(10) 
-top_ten = sum() # sum of column n 
-  
-snowball = stop_words %>% filter(lexicon == "snowball") %>% pull(word) %>% sort() # shows words 
-table = table %>% filter(!word %in% snowball)
+for (i in URLs) {
+  C = c(x, y)
+  C = rep_scores(i)
+  df = cbind(df, C)
+  wait()
+}
 
-# filter stop_words -> textclean package
-filter(!lyrics %in% stop_words$word)
-# token words -> from table, of lyrics 
-# ^> needing a table to token-ize lyrics is throwing me off
+df
+save(df, file = "df.Rda")
+```
 
-# count and keep tokens 
-# find way to standardize repetition 
-# ^> find way to token phrases? 
-# return standardized score 
-
+```{r,eval=FALSE, include=FALSE}
+load("df.Rda")
+df2 <- t(df)
+df2 <- data.table(df2)
+colnames(df2) <- c('top_ten', 'repeated')
+df2 <- df2[-c(1,2)]
+final_df <- cbind(data_songs, df2)
+final_df <- final_df %>% mutate(top_ten = as.numeric(top_ten), repeated = as.numeric(repeated))
+save(final_df, file = "final_df.Rda")
 ```
 
 
-# for output we would want to make the url's a character vector, to run through a for loop. the for loop should feed th url's into the lyrics + score function. returning two scores of repetition. This would be best if we could input these scores into a new column that correlates with the row of the song.
 
-# IDEAS FOR STANDARDIZING: 
-#  - amount of times the top ten most repeated words were repeated
-#   ^> isn't standardized, will skew to songs with more words
-#  - total amount of unique (or copied) words / total amount of words 
-#  - (total amount of copied (or unique) phrases / sentences) / (total amount of sentences)
-
-
-
-```
-
-```{r}
-# psuedo code: 
-# lyric links 
-# may need different functions for different songs 
-URLs = c(lyrics(no1_58, no2_58, no3_58))
-# feed into function by making for (i in URLs[i])
-# make sure format will work 
-
-```
 
 
